@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  --void: #05060a;
+  --orbit: #0c1018;
+}
+
+body {
+  background: radial-gradient(ellipse at top, #111827 0%, #05060a 70%);
+  color: #e5e7eb;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.orbit-glow {
+  box-shadow: 0 0 60px rgba(110, 231, 183, 0.15);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+.float {
+  animation: float 8s ease-in-out infinite;
+}
