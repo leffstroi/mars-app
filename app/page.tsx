@@ -2,15 +2,30 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Orbit, ArrowRight, Lock } from 'lucide-react';
+import { Orbit, Lock } from 'lucide-react';
 import AISearch from '@/components/AISearch';
 
 export default function Home() {
-  const [showPremium, setShowPremium] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handlePremium = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Checkout failed');
+      }
+    } catch {
+      alert('Error starting checkout');
+    }
+    setLoading(false);
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl float" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-warm/5 rounded-full blur-3xl float" style={{ animationDelay: '2s' }} />
@@ -61,17 +76,16 @@ export default function Home() {
 
         <div className="mt-16 text-center">
           <button
-            onClick={() => setShowPremium(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-void font-medium hover:bg-accent/90 transition"
+            onClick={handlePremium}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-void font-medium hover:bg-accent/90 transition disabled:opacity-50"
           >
             <Lock className="w-4 h-4" />
-            Unlock personalized roadmap — $9/mo
+            {loading ? 'Opening...' : 'Unlock personalized roadmap — $9/mo'}
           </button>
-          {showPremium && (
-            <p className="mt-4 text-sm text-gray-500">
-              Premium: unlimited deep plans, saved history, export. Core AI search stays free.
-            </p>
-          )}
+          <p className="mt-4 text-sm text-gray-500">
+            Premium: unlimited deep plans, saved history, export.
+          </p>
         </div>
       </div>
     </main>
