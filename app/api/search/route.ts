@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
     const { query } = await req.json();
     if (!query?.trim()) return NextResponse.json({ error: 'Empty query' }, { status: 400 });
 
-    // 1. Search
     let context = '';
     if (TAVILY_API_KEY) {
       const tavilyRes = await fetch('https://api.tavily.com/search', {
@@ -21,78 +20,62 @@ export async function POST(req: NextRequest) {
           api_key: TAVILY_API_KEY,
           query,
           search_depth: 'advanced',
-          max_results: 8,
+          max_results: 6,
           include_answer: true,
         }),
       });
       const data = await tavilyRes.json();
-      context = data.answer || '';
-      if (data.results?.length) {
-        context += '\n\n' + data.results
-          .map((r: any) => `${r.title}: ${r.content?.slice(0, 400) || ''}`)
-          .join('\n---\n');
-      }
+      context = (data.answer || '') + '\n' + (data.results || [])
+        .map((r: any) => r.content?.slice(0, 300) || '')
+        .join('\n');
     }
 
-    // 2. Past memory
-    let memory = '';
-    if (SUPABASE_URL && SUPABASE_KEY) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-      const { data } = await supabase
-        .from('queries')
-        .select('query, answer')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      if (data?.length) {
-        memory = data.map((d: any) => `Q: ${d.query}\nA: ${d.answer?.slice(0, 150)}`).join('\n');
-      }
+    if (!GROQ_API_KEY) {
+      return NextResponse.json({ answer: 'GROQ_API_KEY missing in Vercel env.' });
     }
 
-    // 3. Force clean synthesis
-    let finalAnswer = '';
-    if (GROQ_API_KEY && context) {
-      const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: `You answer career and skill questions clearly and directly.
-Rules:
-- Give ONE clear, concrete answer first.
-- Then 2-4 short actionable points.
-- No source dumps, no raw website text, no lists of titles.
-- Be specific and practical.
-- Respond in the same language as the user's question.`,
-            },
-            {
-              role: 'user',
-              content: `Question: ${query}\n\nSearch context:\n${context.slice(0, 4000)}\n\nPast answers (improve on them if relevant):\n${memory}\n\nWrite a clear final answer. No sources section.`,
-            },
-          ],
-          temperature: 0.2,
-          max_tokens: 600,
-        }),
+    const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'Answer clearly and directly in the user\'s language. Give one concrete answer + 2-3 short points. No source lists.',
+          },
+          {
+            role: 'user',
+            content: `Question: ${query}\n\nContext:\n${context.slice(0, 3000)}\n\nClear answer:`,
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 500,
+      }),
+    });
+
+    const llmData = await llmRes.json();
+
+    if (!llmRes.ok) {
+      return NextResponse.json({
+        answer: `Groq error ${llmRes.status}: ${JSON.stringify(llmData).slice(0, 300)}`,
       });
-      const llmData = await llmRes.json();
-      finalAnswer = llmData.choices?.[0]?.message?.content || '';
     }
 
-    if (!finalAnswer) finalAnswer = 'Could not generate a clear answer. Try again.';
+    const finalAnswer = llmData.choices?.[0]?.message?.content || 'Empty response from Groq';
 
-    // 4. Save
     if (SUPABASE_URL && SUPABASE_KEY) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-      await supabase.from('queries').insert({ query, answer: finalAnswer });
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        await supabase.from('queries').insert({ query, answer: finalAnswer });
+      } catch {}
     }
 
     return NextResponse.json({ answer: finalAnswer });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ answer: `Server error: ${e.message}` });
   }
 }
