@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
             role: 'system',
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     if (!llmRes.ok) {
       return NextResponse.json({
-        answer: `Groq error ${llmRes.status}: ${JSON.stringify(llmData).slice(0, 300)}`,
+        answer: `Groq error ${llmRes.status}: ${JSON.stringify(llmData).slice(0, 400)}`,
       });
     }
 
