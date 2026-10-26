@@ -81,7 +81,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-void font-medium hover:bg-accent/90 transition disabled:opacity-50"
           >
             <Lock className="w-4 h-4" />
-            {loading ? 'Opening...' : 'Unlock personalized roadmap — $9/mo'}
+            {loading ? 'Opening...' : 'Unlock personalized roadmap — $4.50/mo'}
           </button>
           <p className="mt-4 text-sm text-gray-500">
             Premium: unlimited deep plans, saved history, export.
