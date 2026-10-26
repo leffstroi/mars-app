@@ -1,41 +1,36 @@
 # MARS Pivot
 
-**AI-powered career resilience platform** for the acute 2025–2026 problem of AI-driven job displacement, skill disruption, and the search for meaningful, human-edge work.
+AI career resilience site with **real web search** (Tavily) + memory (Supabase).
 
-People are actively searching for concrete answers: how to pivot, what skills still matter, how to use AI without being replaced by it, and how to rebuild purpose when roles evaporate.
+## Setup (phone-friendly)
 
-MARS Pivot gives precise, actionable answers by combining a curated knowledge base of strategies + live-style web-informed reasoning (mockable to real search/LLM).
+### 1. Tavily (web search)
+- Go to https://tavily.com → Sign up (no card)
+- Copy API key
 
-## Why this problem
-- AI is already reducing entry-level and white-collar hiring; surveys show majority expect net job loss and loss of meaning in work (Pew, Elon University, WEF).
-- Existing tools are either generic career coaches or enterprise reskilling platforms. Few deliver personalized, concrete transition paths + AI search for individuals in real time.
-- Freemium model: free core help, premium for deep personalized roadmaps and saved plans.
+### 2. Groq (free LLM)
+- Go to https://console.groq.com → API Keys → Create
+- Copy key
 
-## Features
-- Creative orbital/cosmic UI with smooth animations
-- AI Search: ask any question about career pivot, skills, AI impact → structured, practical answer
-- Internal knowledge base of proven strategies (reskilling frameworks, human skills that amplify with AI, 90-day plans)
-- Freemium hooks (premium for unlimited personalized plans, export, history)
-- Responsive, production-ready structure (Next.js + Tailwind + Framer Motion)
-- Ready for Vercel deploy + Supabase (auth, user plans, saved queries)
-
-## Quick start
-```bash
-npm install
-npm run dev
+### 3. Supabase (memory so it learns)
+- https://supabase.com → New project
+- SQL Editor → run:
+```sql
+create table queries (
+  id uuid primary key default gen_random_uuid(),
+  query text,
+  answer text,
+  created_at timestamptz default now()
+);
 ```
-Open http://localhost:3000
+- Settings → API → copy URL + service_role key
 
-## Deploy
-1. Push to GitHub (already done)
-2. Import to Vercel → deploy
-3. (Optional) Create Supabase project, add env vars for auth/db
-4. For real AI: add OPENAI_API_KEY or similar and wire lib/ai.ts
+### 4. Vercel
+- Import repo → Environment Variables:
+  - TAVILY_API_KEY
+  - GROQ_API_KEY (or OPENAI_API_KEY)
+  - NEXT_PUBLIC_SUPABASE_URL
+  - SUPABASE_SERVICE_ROLE_KEY
+- Deploy
 
-## Structure
-- `/app` — Next.js App Router
-- `/components` — UI
-- `/lib` — knowledge base + AI logic
-- Monetization placeholders in UI
-
-Built for real help, not templates.
+Every question is searched live, synthesized, and saved. Next similar questions use past answers as context.

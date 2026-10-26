@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Sparkles, Loader2 } from 'lucide-react';
-import { generateAnswer } from '@/lib/ai';
 
 export default function AISearch() {
   const [query, setQuery] = useState('');
@@ -15,8 +14,17 @@ export default function AISearch() {
     if (!query.trim()) return;
     setLoading(true);
     setAnswer(null);
-    const result = await generateAnswer(query);
-    setAnswer(result);
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
+      setAnswer(data.answer || data.error || 'No answer');
+    } catch {
+      setAnswer('Request failed. Check API keys.');
+    }
     setLoading(false);
   };
 
@@ -27,13 +35,13 @@ export default function AISearch() {
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask: How do I pivot from marketing to AI-augmented roles? What human skills still matter in 2026?"
+            placeholder="Ask anything about pivoting careers, AI skills, 2026 job changes..."
             className="w-full bg-transparent px-6 py-5 text-base resize-none focus:outline-none placeholder:text-gray-500 min-h-[100px]"
             rows={3}
           />
           <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
             <span className="text-xs text-gray-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Knowledge + web-informed
+              <Sparkles className="w-3 h-3" /> Live web search + memory
             </span>
             <button
               type="submit"

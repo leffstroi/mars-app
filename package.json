@@ -5,15 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start"
   },
   "dependencies": {
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "framer-motion": "^11.0.0",
-    "lucide-react": "^0.460.0"
+    "lucide-react": "^0.460.0",
+    "@supabase/supabase-js": "^2.45.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
